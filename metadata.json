@@ -1,0 +1,8 @@
+{
+  "name": "App Volume Control",
+  "description": "Control individual application volume",
+  "uuid": "app-volume-control@aunchagaonkar",
+  "shell-version": [
+    "50"
+  ]
+}
