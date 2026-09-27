@@ -26,10 +26,17 @@ export default class AppVolumeControlExtension extends Extension {
         })
         this._mixerControl.open();
         console.log('Gvc mixer opened');
+        this._streamAddedId = this._mixerControl.connect('stream-added', (control, streamId) => {
+            console.log(`Audio stream added: ${streamId}`);
+        })
         console.log('App Volume Control: enabled');
     }
 
     disable() {
+        if (this._streamAddedId) {
+            this._mixerControl.disconnect(this._streamAddedId);
+            this._streamAddedId = null;
+        }
         this._mixerControl?.close();
         this._mixerControl = null;
         this._indicator?.destroy();
