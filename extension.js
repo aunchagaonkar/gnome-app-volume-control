@@ -4,6 +4,7 @@ import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+import Gvc from 'gi://Gvc';
 
 export default class AppVolumeControlExtension extends Extension {
     enable() {
@@ -20,10 +21,17 @@ export default class AppVolumeControlExtension extends Extension {
         })
         this._indicator.menu.addMenuItem(testItem);
         Main.panel.addToStatusArea(this.uuid, this._indicator);
+        this._mixerControl = new Gvc.MixerControl({
+            name: 'App Volume Control',
+        })
+        this._mixerControl.open();
+        console.log('Gvc mixer opened');
         console.log('App Volume Control: enabled');
     }
 
     disable() {
+        this._mixerControl?.close();
+        this._mixerControl = null;
         this._indicator?.destroy();
         this._indicator = null;
         console.log('App Volume Control: disabled');
