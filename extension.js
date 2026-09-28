@@ -36,7 +36,15 @@ export default class AppVolumeControlExtension extends Extension {
 
         // add a callback for stream-added signal
         this._streamAddedId = this._mixerControl.connect('stream-added', (control, streamId) => {
-            console.log(`Audio stream added: ${streamId}`);
+            const stream = this._mixerControl.lookup_stream_id(streamId);
+
+            if (!stream) {
+                console.log(`Could not find stream: ${streamId}`);
+                return;
+            }
+
+
+            console.log(`Audio stream added: ${streamId}, name: ${stream.name}`);
         })
         
         console.log('App Volume Control: enabled');
