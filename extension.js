@@ -18,7 +18,7 @@ export default class AppVolumeControlExtension extends Extension {
         this._indicator.add_child(icon);
 
         // add a popup menu item 
-        const testItem = new PopupMenu.PopupMenuItem('No applicatios playing audio');
+        const testItem = new PopupMenu.PopupMenuItem('No applications playing audio');
         testItem.connect('activate', () => {
             console.log('Test item clicked');
         })
@@ -34,8 +34,9 @@ export default class AppVolumeControlExtension extends Extension {
         this._mixerControl.open();
         console.log('Gvc mixer opened');
         this._mixerControl.connect('state-changed', () => {
-            this.logPlaybackStream();
+            this._logPlaybackStream();
         })
+
         // add a callback for stream-added signal
         this._streamAddedId = this._mixerControl.connect('stream-added', (control, streamId) => {
             const stream = this._mixerControl.lookup_stream_id(streamId);
@@ -47,13 +48,13 @@ export default class AppVolumeControlExtension extends Extension {
 
 
             console.log(`Audio stream added: ${streamId}, name: ${stream.name}`);
-            this.logPlaybackStream();
+            this._logPlaybackStream();
         })
         
         console.log('App Volume Control: enabled');
     }
 
-    logPlaybackStream() {
+    _logPlaybackStream() {
         const streams = this._mixerControl.get_sink_inputs();
         console.log(`Playback stream count: ${streams.length}`);
 
