@@ -33,7 +33,9 @@ export default class AppVolumeControlExtension extends Extension {
 
         this._mixerControl.open();
         console.log('Gvc mixer opened');
-
+        this._mixerControl.connect('state-changed', () => {
+            this.logPlaybackStream();
+        })
         // add a callback for stream-added signal
         this._streamAddedId = this._mixerControl.connect('stream-added', (control, streamId) => {
             const stream = this._mixerControl.lookup_stream_id(streamId);
@@ -45,11 +47,20 @@ export default class AppVolumeControlExtension extends Extension {
 
 
             console.log(`Audio stream added: ${streamId}, name: ${stream.name}`);
+            this.logPlaybackStream();
         })
         
         console.log('App Volume Control: enabled');
     }
 
+    logPlaybackStream() {
+        const streams = this._mixerControl.get_sink_inputs();
+        console.log(`Playback stream count: ${streams.length}`);
+
+        for (const stream of streams) {
+            console.log(`Playback app: ${stream.name}, `)
+        }
+    }
     disable() {
 
         if (this._streamAddedId) {
