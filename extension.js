@@ -18,12 +18,7 @@ export default class AppVolumeControlExtension extends Extension {
         this._indicator.add_child(icon);
 
         // add a popup menu item
-        this._emptyItem = new PopupMenu.PopupMenuItem('No applications playing audio', { reactive: false });
-        // testItem.connect('activate', () => {
-        //     console.log('Test item clicked');
-        // })
-        // this._indicator.menu.addMenuItem(testItem);
-        this._indicator.menu.addMenuItem(this._emptyItem);
+        this._streamItems = [];
 
         Main.panel.addToStatusArea(this.uuid, this._indicator);
 
@@ -36,6 +31,7 @@ export default class AppVolumeControlExtension extends Extension {
         console.log('Gvc mixer opened');
         this._mixerControl.connect('state-changed', () => {
             this._logPlaybackStream();
+            this._rebuildMenu()
         })
 
         // add a callback for stream-added signal
@@ -50,6 +46,7 @@ export default class AppVolumeControlExtension extends Extension {
 
             console.log(`Audio stream added: ${streamId}, name: ${stream.name}`);
             this._logPlaybackStream();
+            this._rebuildMenu();
         })
 
         console.log('App Volume Control: enabled');
@@ -59,14 +56,36 @@ export default class AppVolumeControlExtension extends Extension {
         const streams = this._mixerControl.get_sink_inputs();
         console.log(`Playback stream count: ${streams.length}`);
 
-        if (streams.length > 0) {
-            this._emptyItem.label.text = streams.map(stream => stream.name).join(', ');
-        }
-        else {
-            this._emptyItem.label.text = 'No applications playing audio';
-        }
+        // if (streams.length > 0) {
+        //     this._emptyItem.label.text = streams.map(stream => stream.name).join(', ');
+        // }
+        // else {
+        //     this._emptyItem.label.text = 'No applications playing audio';
+        // }
         for (const stream of streams) {
             console.log(`Playback app: ${stream.name}, `)
+        }
+    }
+
+    _rebuildMenu() {
+        for (const item of this._streamItems) {
+            item.destroy();
+        }
+        this._streamItems = [];
+
+        const streams = this._mixerControl.get_sink_inputs();
+
+        if (streams.length === 0) {
+          const emptyItem = new PopupMenu.PopupMenuItem('No applications playing audio', { reactive: false });
+          this._indicator.menu.addMenuItem(emptyItem);
+          this._streamItems.push(emptyItem);
+          return;
+        }
+
+        for (const stream of streams) {
+          const item = new PopupMenu.PopupMenuItem(stream.name);
+          this._indicator.menu.addMenuItem(item);
+          this._streamItems.push(item);
         }
     }
     disable() {
