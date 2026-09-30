@@ -17,15 +17,16 @@ export default class AppVolumeControlExtension extends Extension {
         });
         this._indicator.add_child(icon);
 
-        // add a popup menu item 
-        const testItem = new PopupMenu.PopupMenuItem('No applications playing audio');
-        testItem.connect('activate', () => {
-            console.log('Test item clicked');
-        })
-        this._indicator.menu.addMenuItem(testItem);
+        // add a popup menu item
+        this._emptyItem = new PopupMenu.PopupMenuItem('No applications playing audio', { reactive: false });
+        // testItem.connect('activate', () => {
+        //     console.log('Test item clicked');
+        // })
+        // this._indicator.menu.addMenuItem(testItem);
+        this._indicator.menu.addMenuItem(this._emptyItem);
 
         Main.panel.addToStatusArea(this.uuid, this._indicator);
-        
+
         // monitor newly added audio streams
         this._mixerControl = new Gvc.MixerControl({
             name: 'App Volume Control',
@@ -50,7 +51,7 @@ export default class AppVolumeControlExtension extends Extension {
             console.log(`Audio stream added: ${streamId}, name: ${stream.name}`);
             this._logPlaybackStream();
         })
-        
+
         console.log('App Volume Control: enabled');
     }
 
@@ -58,6 +59,12 @@ export default class AppVolumeControlExtension extends Extension {
         const streams = this._mixerControl.get_sink_inputs();
         console.log(`Playback stream count: ${streams.length}`);
 
+        if (streams.length > 0) {
+            this._emptyItem.label.text = streams.map(stream => stream.name).join(', ');
+        }
+        else {
+            this._emptyItem.label.text = 'No applications playing audio';
+        }
         for (const stream of streams) {
             console.log(`Playback app: ${stream.name}, `)
         }
@@ -68,13 +75,13 @@ export default class AppVolumeControlExtension extends Extension {
             this._mixerControl.disconnect(this._streamAddedId);
             this._streamAddedId = null;
         }
-        
+
         this._mixerControl?.close();
         this._mixerControl = null;
-        
+
         this._indicator?.destroy();
         this._indicator = null;
-        
+
         console.log('App Volume Control: disabled');
     }
 }
