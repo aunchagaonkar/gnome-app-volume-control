@@ -5,6 +5,8 @@ import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import * as PanelMenu from "resource:///org/gnome/shell/ui/panelMenu.js";
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
 import Gvc from "gi://Gvc";
+import Clutter from "gi://Clutter";
+import * as Slider from "resource:///org/gnome/shell/ui/slider.js";
 
 export default class AppVolumeControlExtension extends Extension {
   enable() {
@@ -86,7 +88,24 @@ export default class AppVolumeControlExtension extends Extension {
       console.log(
         `${stream.name}: volume=${stream.volume}, normal=${baseVolume}, muted=${stream.is_muted}`,
       );
-      const item = new PopupMenu.PopupMenuItem(`${stream.name} : ${percent}%`);
+      const item = new PopupMenu.PopupBaseMenuItem({ reactive: false });
+      const label = new St.Label({
+        text: `${stream.name}: ${percent}`,
+        y_align: Clutter.ActorAlign.CENTER,
+      });
+      const slider = new Slider.Slider(percent / 100);
+      slider.connect("notify::value", () => {
+        const newVolume = Math.round(slider.value * baseVolume);
+        console.log(
+          `${stream.name}: slider_value=${slider.value} newVolume=${newVolume}`,
+        )
+        stream.set_volume(newVolume);
+        stream.push_volume();
+      })
+      slider.x_expand = true;
+      slider.style = "min-width: 140px";
+      item.add_child(label);
+      item.add_child(slider);
       this._indicator.menu.addMenuItem(item);
       this._streamItems.push(item);
     }
