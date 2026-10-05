@@ -102,15 +102,17 @@ export default class AppVolumeControlExtension extends Extension {
       );
       const item = new PopupMenu.PopupBaseMenuItem({ reactive: false });
       const label = new St.Label({
-        text: `${stream.name}: ${percent}`,
+        text: `${stream.name}: ${percent}%`,
         y_align: Clutter.ActorAlign.CENTER,
       });
       const slider = new Slider.Slider(percent / 100);
       slider.connect("notify::value", () => {
         const newVolume = Math.round(slider.value * baseVolume);
+        const newPercent = Math.round(slider.value * 100);
         console.log(
           `${stream.name}: slider_value=${slider.value} newVolume=${newVolume}`,
         )
+        label.text = `${stream.name}: ${newPercent}%`;
         stream.set_volume(newVolume);
         stream.push_volume();
       })
