@@ -104,8 +104,21 @@ export default class AppVolumeControlExtension extends Extension {
       const label = new St.Label({
         text: `${stream.name}: ${percent}%`,
         y_align: Clutter.ActorAlign.CENTER,
+        style_class: "app-volume-label"
       });
       const slider = new Slider.Slider(percent / 100);
+      const muteIcon = new St.Icon({
+        icon_name: stream.is_muted
+          ? "audio-volume-muted-symbolic" : "audio-volume-high-symbolic",
+        style_class: "popup-menu-icon",
+      });
+
+      const muteButton = new St.Button({
+        style_class: "app-volume-mute-icon",
+        can_focus: true,
+        child: muteIcon,
+      });
+
       slider.connect("notify::value", () => {
         const newVolume = Math.round(slider.value * baseVolume);
         const newPercent = Math.round(slider.value * 100);
@@ -115,11 +128,21 @@ export default class AppVolumeControlExtension extends Extension {
         label.text = `${stream.name}: ${newPercent}%`;
         stream.set_volume(newVolume);
         stream.push_volume();
-      })
+      });
+
+      muteButton.connect("clicked", () => {
+        const shouldMute = !stream.is_muted;
+        stream.change_is_muted(shouldMute);
+        muteIcon.icon_name = shouldMute ? "audio-volume-muted-symbolic" : "audio-volume-high-symbolic";
+      });
+
       slider.x_expand = true;
       slider.style = "min-width: 140px";
+
       item.add_child(label);
+      item.add_child(muteButton);
       item.add_child(slider);
+
       this._indicator.menu.addMenuItem(item);
       this._streamItems.push(item);
     }

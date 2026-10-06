@@ -1,1 +1,12 @@
 /* Add your custom extension styling here */
+.app-volume-label {
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.app-volume-mute-icon {
+    min-height: 28px;
+    min-width: 28px;
+    padding: 4px;
+    border-radius: 14px;
+}
