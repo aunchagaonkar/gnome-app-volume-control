@@ -10,57 +10,64 @@ import * as Slider from "resource:///org/gnome/shell/ui/slider.js";
 
 export default class AppVolumeControlExtension extends Extension {
   enable() {
-    // add a icon to the panel
     this._indicator = new PanelMenu.Button(0.0, this.metadata.name, false);
+
     const icon = new St.Icon({
       icon_name: "audio-volume-high-symbolic",
       style_class: "system-status-icon",
     });
+
     this._indicator.add_child(icon);
 
-    // add a popup menu item
     this._streamItems = [];
+    this._streamSignalHandlers = [];
 
     Main.panel.addToStatusArea(this.uuid, this._indicator);
 
-    // monitor newly added audio streams
     this._mixerControl = new Gvc.MixerControl({
       name: "App Volume Control",
     });
 
     this._mixerControl.open();
-    console.log("Gvc mixer opened");
 
-    // add a callback for stream-added signal
     this._streamAddedId = this._mixerControl.connect(
       "stream-added",
-      (control, streamId) => {
+      (_control, streamId) => {
         const stream = this._mixerControl.lookup_stream_id(streamId);
 
         if (!stream) {
-          console.log(`Could not find stream: ${streamId}`);
+          console.debug(`Could not find stream: ${streamId}`);
           return;
         }
 
-        console.log(`Audio stream added: ${streamId}, name: ${stream.name}`);
-        this._logPlaybackStream();
         this._rebuildMenu();
       },
     );
 
     this._streamRemovedId = this._mixerControl.connect(
       "stream-removed",
-      (control, streamId) => {
-        console.log(`Audio stream removed: ${streamId}`);
-        this._rebuildMenu();
-      }
-    )
+      (_control, _streamId) => this._rebuildMenu()
+    );
+
+    this._streamChangedId = this._mixerControl.connect(
+      "stream-changed",
+      (_control, _streamId) => this._rebuildMenu()
+    );
 
     this._stateChangedId = this._mixerControl.connect(
       "state-changed",
-      (control, streamId) => {
-        console.log(`Audio stream state changed: ${streamId}`);
-        this._rebuildMenu();
+      (_control, _state) => this._rebuildMenu()
+    );
+
+  }
+
+  _disconnectStreamSignals() {
+    for (const { stream, volumeId, mutedId } of this._streamSignalHandlers) {
+      if (volumeId) {
+        stream.disconnect(volumeId);
+      }
+      if (mutedId) {
+        stream.disconnect(mutedId);
       }
     )
 
@@ -73,9 +80,11 @@ export default class AppVolumeControlExtension extends Extension {
     for (const stream of streams) {
       console.log(`Playback app: ${stream.name}, `);
     }
+    this._streamSignalHandlers = [];
   }
-
   _rebuildMenu() {
+    this._disconnectStreamSignals();
+
     for (const item of this._streamItems) {
       item.destroy();
     }
@@ -136,6 +145,22 @@ export default class AppVolumeControlExtension extends Extension {
         muteIcon.icon_name = shouldMute ? "audio-volume-muted-symbolic" : "audio-volume-high-symbolic";
       });
 
+      const volumeId = stream.connect("notify::volume", () => {
+        const updatedPercent = Math.round(
+          (stream.volume * 100) / baseVolume
+        )
+        label.text = `${stream.name}: ${updatedPercent}%`;
+        const updatedValue = stream.volume / baseVolume;
+        if (slider.value !== updatedValue) {
+          slider.value = updatedValue;
+        }
+      });
+
+      const mutedId = stream.connect("notify::is-muted", () => {
+        muteIcon.icon_name = stream.is_muted
+          ? "audio-volume-muted-symbolic" : "audio-volume-high-symbolic"
+      });
+
       slider.x_expand = true;
       slider.style = "min-width: 140px";
 
@@ -145,9 +170,22 @@ export default class AppVolumeControlExtension extends Extension {
 
       this._indicator.menu.addMenuItem(item);
       this._streamItems.push(item);
+
+      this._streamSignalHandlers.push({
+        stream,
+        volumeId,
+        mutedId
+      })
     }
   }
   disable() {
+    this._disconnectStreamSignals();
+
+    for (const item of this._streamItems) {
+      item.destroy();
+    }
+    this._streamItems = [];
+
     if (this._streamAddedId) {
       this._mixerControl.disconnect(this._streamAddedId);
       this._streamAddedId = null;
@@ -158,6 +196,10 @@ export default class AppVolumeControlExtension extends Extension {
       this._streamRemovedId = null;
     }
 
+    if (this._streamChangedId) {
+      this._mixerControl.disconnect(this._streamChangedId);
+      this._streamChangedId = null;
+    }
     if (this._stateChangedId) {
       this._mixerControl.disconnect(this._stateChangedId);
       this._stateChangedId = null;
