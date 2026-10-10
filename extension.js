@@ -69,19 +69,10 @@ export default class AppVolumeControlExtension extends Extension {
       if (mutedId) {
         stream.disconnect(mutedId);
       }
-    )
-
-    console.log("App Volume Control: enabled");
-  }
-
-  _logPlaybackStream() {
-    const streams = this._mixerControl.get_sink_inputs();
-    console.log(`Playback stream count: ${streams.length}`);
-    for (const stream of streams) {
-      console.log(`Playback app: ${stream.name}, `);
     }
     this._streamSignalHandlers = [];
   }
+
   _rebuildMenu() {
     this._disconnectStreamSignals();
 
@@ -106,9 +97,6 @@ export default class AppVolumeControlExtension extends Extension {
       const baseVolume = this._mixerControl.get_vol_max_norm();
 
       const percent = Math.round((stream.volume * 100) / baseVolume);
-      console.log(
-        `${stream.name}: volume=${stream.volume}, normal=${baseVolume}, muted=${stream.is_muted}`,
-      );
       const item = new PopupMenu.PopupBaseMenuItem({ reactive: false });
       const label = new St.Label({
         text: `${stream.name}: ${percent}%`,
@@ -131,9 +119,6 @@ export default class AppVolumeControlExtension extends Extension {
       slider.connect("notify::value", () => {
         const newVolume = Math.round(slider.value * baseVolume);
         const newPercent = Math.round(slider.value * 100);
-        console.log(
-          `${stream.name}: slider_value=${slider.value} newVolume=${newVolume}`,
-        )
         label.text = `${stream.name}: ${newPercent}%`;
         stream.set_volume(newVolume);
         stream.push_volume();
@@ -211,6 +196,5 @@ export default class AppVolumeControlExtension extends Extension {
     this._indicator?.destroy();
     this._indicator = null;
 
-    console.log("App Volume Control: disabled");
   }
 }
