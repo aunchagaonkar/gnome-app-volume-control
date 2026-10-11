@@ -22,6 +22,8 @@ export default class AppVolumeControlExtension extends Extension {
     this._streamItems = [];
     this._streamSignalHandlers = [];
 
+    this._updatingSlider = false;
+
     Main.panel.addToStatusArea(this.uuid, this._indicator);
 
     this._mixerControl = new Gvc.MixerControl({
@@ -46,17 +48,17 @@ export default class AppVolumeControlExtension extends Extension {
 
     this._streamRemovedId = this._mixerControl.connect(
       "stream-removed",
-      (_control, _streamId) => this._rebuildMenu()
+      (_control, _streamId) => this._rebuildMenu(),
     );
 
     this._streamChangedId = this._mixerControl.connect(
       "stream-changed",
-      (_control, _streamId) => this._rebuildMenu()
+      (_control, _streamId) => this._rebuildMenu(),
     );
 
     this._stateChangedId = this._mixerControl.connect(
       "state-changed",
-      (_control, _state) => this._rebuildMenu()
+      (_control, _state) => this._rebuildMenu(),
     );
 
   }
@@ -101,7 +103,7 @@ export default class AppVolumeControlExtension extends Extension {
       const label = new St.Label({
         text: `${stream.name}: ${percent}%`,
         y_align: Clutter.ActorAlign.CENTER,
-        style_class: "app-volume-label"
+        style_class: "app-volume-label",
       });
       const slider = new Slider.Slider(percent / 100);
       const muteIcon = new St.Icon({
@@ -117,6 +119,8 @@ export default class AppVolumeControlExtension extends Extension {
       });
 
       slider.connect("notify::value", () => {
+        if (this._updatingSlider)
+          return;
         const newVolume = Math.round(slider.value * baseVolume);
         const newPercent = Math.round(slider.value * 100);
         label.text = `${stream.name}: ${newPercent}%`;
@@ -133,11 +137,16 @@ export default class AppVolumeControlExtension extends Extension {
       const volumeId = stream.connect("notify::volume", () => {
         const updatedPercent = Math.round(
           (stream.volume * 100) / baseVolume
-        )
+        );
         label.text = `${stream.name}: ${updatedPercent}%`;
         const updatedValue = stream.volume / baseVolume;
-        if (slider.value !== updatedValue) {
-          slider.value = updatedValue;
+        if (Math.abs(slider.value - updatedValue) > 0.001) {
+          this._updatingSlider = true;
+          try {
+            slider.value = updatedValue;
+          } finally {
+            this._updatingSlider = false;
+          }
         }
       });
 
@@ -159,8 +168,8 @@ export default class AppVolumeControlExtension extends Extension {
       this._streamSignalHandlers.push({
         stream,
         volumeId,
-        mutedId
-      })
+        mutedId,
+      });
     }
   }
   disable() {
