@@ -1,8 +1,9 @@
 {
   "name": "App Volume Control",
   "description": "Control individual application volume",
-  "uuid": "app-volume-control@aunchagaonkar",
+  "uuid": "app-volume-control@aunchagaonkar.github.io",
   "shell-version": [
     "50"
-  ]
+  ],
+  "url": "https://github.com/aunchagaonkar/gnome-app-volume-control"
 }
