@@ -51,11 +51,6 @@ export default class AppVolumeControlExtension extends Extension {
       (_control, _streamId) => this._rebuildMenu(),
     );
 
-    this._streamChangedId = this._mixerControl.connect(
-      "stream-changed",
-      (_control, _streamId) => this._rebuildMenu(),
-    );
-
     this._stateChangedId = this._mixerControl.connect(
       "state-changed",
       (_control, _state) => this._rebuildMenu(),
@@ -190,10 +185,6 @@ export default class AppVolumeControlExtension extends Extension {
       this._streamRemovedId = null;
     }
 
-    if (this._streamChangedId) {
-      this._mixerControl.disconnect(this._streamChangedId);
-      this._streamChangedId = null;
-    }
     if (this._stateChangedId) {
       this._mixerControl.disconnect(this._stateChangedId);
       this._stateChangedId = null;
