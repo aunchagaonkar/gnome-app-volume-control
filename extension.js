@@ -106,7 +106,8 @@ export default class AppVolumeControlExtension extends Extension {
       const slider = new Slider.Slider(percent / 100);
       const muteIcon = new St.Icon({
         icon_name: stream.is_muted
-          ? "audio-volume-muted-symbolic" : "audio-volume-high-symbolic",
+          ? "audio-volume-muted-symbolic"
+          : "audio-volume-high-symbolic",
         style_class: "popup-menu-icon",
       });
 
@@ -129,7 +130,9 @@ export default class AppVolumeControlExtension extends Extension {
       muteButton.connect("clicked", () => {
         const shouldMute = !stream.is_muted;
         stream.change_is_muted(shouldMute);
-        muteIcon.icon_name = shouldMute ? "audio-volume-muted-symbolic" : "audio-volume-high-symbolic";
+        muteIcon.icon_name = shouldMute
+          ? "audio-volume-muted-symbolic"
+          : "audio-volume-high-symbolic";
       });
 
       const volumeId = stream.connect("notify::volume", () => {
@@ -150,7 +153,8 @@ export default class AppVolumeControlExtension extends Extension {
 
       const mutedId = stream.connect("notify::is-muted", () => {
         muteIcon.icon_name = stream.is_muted
-          ? "audio-volume-muted-symbolic" : "audio-volume-high-symbolic"
+          ? "audio-volume-muted-symbolic"
+          : "audio-volume-high-symbolic";
       });
 
       slider.x_expand = true;
@@ -193,10 +197,10 @@ export default class AppVolumeControlExtension extends Extension {
       this._stateChangedId = null;
     }
 
-    this._mixerControl?.close();
+    this._mixerControl.close();
     this._mixerControl = null;
 
-    this._indicator?.destroy();
+    this._indicator.destroy();
     this._indicator = null;
 
   }
