@@ -57,7 +57,10 @@ export default class AppVolumeControlExtension extends Extension {
 
     this._stateChangedId = this._mixerControl.connect(
       "state-changed",
-      (_control, _state) => this._rebuildMenu(),
+      (_control, state) => {
+        if (state === Gvc.MixerControlState.READY)
+          this._rebuildMenu();
+      },
     );
 
   }
@@ -75,6 +78,8 @@ export default class AppVolumeControlExtension extends Extension {
   }
 
   _rebuildMenu() {
+    if (this._mixerControl.get_state() !== Gvc.MixerControlState.READY)
+      return;
     this._disconnectStreamSignals();
 
     for (const item of this._streamItems) {
