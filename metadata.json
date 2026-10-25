@@ -5,5 +5,9 @@
   "shell-version": [
     "50"
   ],
-  "url": "https://github.com/aunchagaonkar/gnome-app-volume-control"
+  "url": "https://github.com/aunchagaonkar/gnome-app-volume-control",
+  "donations": {
+    "paypal": "aunchagaonkar",
+    "github": "aunchagaonkar"
+  }
 }
