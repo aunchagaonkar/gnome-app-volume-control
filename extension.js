@@ -9,6 +9,7 @@ import * as PanelMenu from "resource:///org/gnome/shell/ui/panelMenu.js";
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
 import Gvc from "gi://Gvc";
 import Clutter from "gi://Clutter";
+import Pango from "gi://Pango";
 import * as Slider from "resource:///org/gnome/shell/ui/slider.js";
 
 export default class AppVolumeControlExtension extends Extension {
@@ -99,10 +100,21 @@ export default class AppVolumeControlExtension extends Extension {
       const percent = Math.round((stream.volume * 100) / baseVolume);
       const item = new PopupMenu.PopupBaseMenuItem({ reactive: false });
       const label = new St.Label({
-        text: `${stream.name}: ${percent}%`,
+        text: stream.name,
+        width: 125,
         y_align: Clutter.ActorAlign.CENTER,
         style_class: "app-volume-label",
       });
+      label.ellipsize = Pango.EllipsizeMode.END;
+
+      const percentLabel = new St.Label({
+        text: `${percent}%`,
+        width: 45,
+        y_align: Clutter.ActorAlign.CENTER,
+        style_class: "app-volume-label",
+      });
+      percentLabel.clutter_text.x_align = Clutter.ActorAlign.END;
+
       const slider = new Slider.Slider(percent / 100);
       const muteIcon = new St.Icon({
         icon_name: stream.is_muted
@@ -122,7 +134,7 @@ export default class AppVolumeControlExtension extends Extension {
           return;
         const newVolume = Math.round(slider.value * baseVolume);
         const newPercent = Math.round(slider.value * 100);
-        label.text = `${stream.name}: ${newPercent}%`;
+        percentLabel.text = `${newPercent}%`;
         stream.set_volume(newVolume);
         stream.push_volume();
       });
@@ -139,7 +151,7 @@ export default class AppVolumeControlExtension extends Extension {
         const updatedPercent = Math.round(
           (stream.volume * 100) / baseVolume
         );
-        label.text = `${stream.name}: ${updatedPercent}%`;
+        percentLabel.text = `${updatedPercent}%`;
         const updatedValue = stream.volume / baseVolume;
         if (Math.abs(slider.value - updatedValue) > 0.001) {
           this._updatingSlider = true;
@@ -158,9 +170,10 @@ export default class AppVolumeControlExtension extends Extension {
       });
 
       slider.x_expand = true;
-      slider.style = "min-width: 140px";
+      slider.style = "min-width: 190px";
 
       item.add_child(label);
+      item.add_child(percentLabel);
       item.add_child(muteButton);
       item.add_child(slider);
 
