@@ -62,7 +62,36 @@ export default class AppVolumeControlExtension extends Extension {
           this._rebuildMenu();
       },
     );
+  }
 
+  disable() {
+    this._disconnectStreamSignals();
+
+    for (const item of this._streamItems) {
+      item.destroy();
+    }
+    this._streamItems = [];
+
+    if (this._streamAddedId) {
+      this._mixerControl.disconnect(this._streamAddedId);
+      this._streamAddedId = null;
+    }
+
+    if (this._streamRemovedId) {
+      this._mixerControl.disconnect(this._streamRemovedId);
+      this._streamRemovedId = null;
+    }
+
+    if (this._stateChangedId) {
+      this._mixerControl.disconnect(this._stateChangedId);
+      this._stateChangedId = null;
+    }
+
+    this._mixerControl.close();
+    this._mixerControl = null;
+
+    this._indicator.destroy();
+    this._indicator = null;
   }
 
   _disconnectStreamSignals() {
@@ -191,35 +220,5 @@ export default class AppVolumeControlExtension extends Extension {
         mutedId,
       });
     }
-  }
-  disable() {
-    this._disconnectStreamSignals();
-
-    for (const item of this._streamItems) {
-      item.destroy();
-    }
-    this._streamItems = [];
-
-    if (this._streamAddedId) {
-      this._mixerControl.disconnect(this._streamAddedId);
-      this._streamAddedId = null;
-    }
-
-    if (this._streamRemovedId) {
-      this._mixerControl.disconnect(this._streamRemovedId);
-      this._streamRemovedId = null;
-    }
-
-    if (this._stateChangedId) {
-      this._mixerControl.disconnect(this._stateChangedId);
-      this._stateChangedId = null;
-    }
-
-    this._mixerControl.close();
-    this._mixerControl = null;
-
-    this._indicator.destroy();
-    this._indicator = null;
-
   }
 }
